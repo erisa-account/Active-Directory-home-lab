@@ -10,7 +10,7 @@ Two virtual machines, running on two separate physical laptops, connected over t
 
 ## Why two laptops instead of one
 
-Both laptops only have 8GB of RAM, which isn't enough to comfortably run a server and a client VM on the same machine at once. Splitting them across two laptops, connected over Wi-Fi using VirtualBox's bridged networking, let each VM run with proper resources and made the setup behave more like a real small office network — a server and a separate client machine talking to each other over the network, instead of two VMs boxed into one laptop.
+Both laptops only have 8GB of RAM, which isn't enough to comfortably run a server and a client VM on the same machine at once. Splitting them across two laptops, connected over Wi-Fi using VirtualBox's bridged networking, let each virtual machine run with proper resources and made the setup behave more like a real small office network — a server and a separate client machine talking to each other over the network, instead of two VMs boxed into one laptop.
 
 ## What's done so far
 
