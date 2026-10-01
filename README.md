@@ -19,7 +19,7 @@ Both laptops only have 8GB of RAM, which isn't enough to comfortably run a serve
 - Server promoted to a Domain Controller, domain `lab.local` created
 - Windows 10 Pro client installed and networked
 - RSAT installed on the client to manage Active Directory remotely
-- Client successfully joined to the `lab.local` domain
+- Client successfully joined to the `lab.local` domain 
 - OU structure created (IT, Finance, Employees)
 - User accounts created inside those OUs
 
