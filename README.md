@@ -12,20 +12,17 @@ Two virtual machines, running on two separate physical laptops, connected over t
 
 Both laptops only have 8GB of RAM, which isn't enough to comfortably run a server and a client VM on the same machine at once. Splitting them across two laptops, connected over Wi-Fi using VirtualBox's bridged networking, let each virtual machine run with proper resources and made the setup behave more like a real small office network — a server and a separate client machine talking to each other over the network, instead of two VMs boxed into one laptop.
 
-## What's done so far
+## What this project covers
 
 - Windows Server 2022 installed in Server Core mode (command-line only, no desktop)
 - Static IP, gateway, and DNS configured on the server
 - Server promoted to a Domain Controller, domain `lab.local` created
 - Windows 10 Pro client installed and networked
+- RSAT installed on the client to manage Active Directory remotely
+- Client successfully joined to the `lab.local` domain
+- OU structure created (IT, Finance, Employees)
+- User accounts created inside those OUs
 
-## What's next
-
-- Install RSAT on the client to manage Active Directory remotely
-- Create an OU structure (e.g. IT, Finance, Employees)
-- Create user accounts inside those OUs
-- Join the client to the domain and log in as one of the created users
-- Apply a Group Policy or two (e.g. desktop background, password policy)
 
 ## Why Server Core instead of the usual Desktop GUI
 
