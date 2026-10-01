@@ -1,55 +1,75 @@
-# How this lab was built (and what went wrong along the way)
+# How this lab was built (and what went wrong)
 
-## Problem 1: Not enough memory for one laptop to run both VMs
+## Problem 1: One laptop wasn't enough
 
-My laptop has 8GB of RAM. Running a Windows Server VM and a Windows client VM on it at the same time left barely anything for the host machine, and both VMs felt sluggish.
+My laptop only has 8GB of RAM, so running both a server VM and a client VM on it at once made everything sluggish.
 
-**Fix:** I split the setup across two laptops — one running the server, one running the client — and connected them over the same home Wi-Fi network using VirtualBox's "Bridged Adapter" networking mode. This makes each VM appear as its own separate device on the network, the same way a real physical machine would, so each VM gets a whole laptop's worth of resources instead of sharing one.
+**Fix:** split the two VMs across two laptops, connected over the same Wi-Fi using VirtualBox's "Bridged Adapter" mode. This makes each VM show up as its own device on the network, like a real physical PC, so each one gets a full laptop's resources instead of sharing.
 
-## Problem 2: Windows Server install kept freezing
+## Problem 2: Server install froze at 2%
 
-The first install attempt got stuck at 2% for over two hours with no disk activity. I initially assumed it was a RAM issue.
+The first install attempt sat at 2% for over two hours with no disk activity. I assumed it was a RAM problem.
 
-**Actual cause:** the ISO file was corrupted / incomplete. It was noticeably smaller than a normal Windows install file.
+**Actual cause:** the ISO file was corrupted. It was smaller than it should have been.
 
-**Fix:** deleted the VM, redownloaded a fresh ISO, and the install completed normally in a reasonable time. Lesson: check the downloaded file size before blaming the hardware.
+**Fix:** redownloaded a clean ISO and the install finished normally. Lesson learned: check the file size before blaming the hardware.
 
-## Problem 3: GUI version of Windows Server ran too slow
+## Problem 3: GUI version was too heavy
 
-Even after fixing the ISO, the full Desktop Experience (GUI) version of Windows Server felt heavy on 2GB of RAM.
+Even with a working ISO, the full Desktop Experience version of Windows Server felt slow on 2GB of RAM.
 
-**Fix:** reinstalled using **Server Core** instead — the same installer, just choosing the edition without "(Desktop Experience)" at setup. Server Core has no graphical desktop at all; everything is done through a command-line tool called `sconfig` and PowerShell. It runs noticeably lighter, and it's also a realistic way real servers are managed in production.
+**Fix:** reinstalled using **Server Core** instead — same installer, just picking the edition without "(Desktop Experience)." No desktop at all, everything runs through `sconfig` and PowerShell. Lighter, and closer to how real servers are actually run.
 
-## Problem 4: VM defaulted to the wrong network, twice
+## Problem 4: VM kept landing on the wrong network
 
-After setting up networking, `ipconfig` inside the VM kept showing an address like `10.0.2.15` instead of a normal home network address. That address is a signature VirtualBox uses for its default "NAT" networking mode, which isolates the VM from the rest of the network — meaning the server and client would never have been able to see each other.
+`ipconfig` inside the VM kept showing an address starting with `10.0.2.15`. That's VirtualBox's signature for its default "NAT" mode, which boxes the VM off from the rest of the network — meaning server and client could never see each other like that.
 
-**Fix:** changed the VM's network adapter setting in VirtualBox from NAT to **Bridged Adapter**, pointed at the laptop's real Wi-Fi adapter. After that, the VM picked up a normal address on the home network (`192.168.1.x`), and the server and client could reach each other.
+**Fix:** switched the network adapter setting from NAT to **Bridged Adapter**, pointed at the laptop's real Wi-Fi. After that it picked up a normal home-network address and the two machines could reach each other.
 
-## Problem 5: Server froze mid-setup, right before promoting it to a Domain Controller
+## Problem 5: Server froze right before becoming a Domain Controller
 
-After installing the Guest Additions (a VirtualBox tool that improves mouse/clipboard integration) and briefly testing drag-and-drop between host and VM, the VM became unresponsive — mouse moved, but nothing else responded. This happened right as I was about to run the command that turns the server into a Domain Controller.
+After installing Guest Additions and testing drag-and-drop between host and VM, the VM stopped responding — mouse moved, nothing else did. This happened right as I was about to promote the server.
 
-**Fix:** used VirtualBox's "Reset" option (the VM equivalent of pressing a restart button, not a reinstall) rather than force-closing it. Disabled clipboard sharing and drag-and-drop, which seemed to be the actual cause of the freeze, and retried the setup without touching the VM window while the command ran. It completed normally the second time.
+**Fix:** used VirtualBox's "Reset" (a forced restart, not a reinstall) instead of force-closing it. Turned off clipboard sharing and drag-and-drop, which seemed to be the actual cause, and left the VM alone while the next command ran. Worked fine the second time.
 
-## What actually worked, once things were stable
+## The actual AD part was short
 
-Once the environment was stable, the Active Directory part itself was short — really just two PowerShell commands:
+Once things were stable, turning the server into a Domain Controller only took two commands:
 
 ```powershell
 Install-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools
 Install-ADDSForest -DomainName "lab.local" -InstallDNS
 ```
 
-The second command installs DNS automatically and promotes the server to a Domain Controller for a new domain, `lab.local`. Verified it worked with:
+The second one sets up DNS automatically and creates the domain `lab.local`. Checked it worked with:
 
 ```powershell
 Get-ADDomain
 whoami
 ```
 
-`whoami` returning `LAB\Administrator` confirmed the machine was now part of the domain it had just created.
+`whoami` coming back as `LAB\Administrator` confirmed the server now belonged to its own new domain.
+
+## Problem 6: Client couldn't find or join the domain
+
+This was the longest part of the whole project. Networking issues, not AD, were the real cause — covered on their own in `NETWORKING-NOTES.md`, since it turned out to be the Wi-Fi quietly blocking the two laptops from reaching each other.
+
+## Problem 7: Opened the wrong tool
+
+Tried to create an OU and couldn't find a "New" option anywhere. Turned out I had opened **Active Directory Sites and Services** by mistake, not **Active Directory Users and Computers** — two different tools with similar names. Opening the right one (`dsa.msc`) fixed it right away.
+
+## Problem 8: Password kept getting rejected
+
+New user accounts kept failing with a vague "check password requirements" message. AD enforces a complexity rule by default — 8+ characters, a mix of upper/lowercase, a number, and a symbol, and it can't contain the username. Once the password met all of that, it went through.
+
+## What actually got built
+
+With the client joined to `lab.local`:
+
+- Opened Active Directory Users and Computers (`dsa.msc`) from the client
+- Created an OU structure: **IT**, **Finance**, **Employees**
+- Created user accounts inside those OUs, each with a logon name and a password that met the domain's rules
 
 ## Biggest takeaway
 
-Most of the real difficulty wasn't Active Directory itself — it was the groundwork around it: getting networking right between two machines, picking the right Windows edition for limited hardware, and telling the difference between "this is actually broken" and "this is just slow." Once that groundwork was solid, the AD-specific steps were short and straightforward.
+The hard part was never really Active Directory — it was the setup around it: getting two machines to actually talk to each other, picking a Windows edition that fit the hardware, and figuring out when something was truly broken versus just slow. Once that was sorted, the AD steps themselves were quick.
