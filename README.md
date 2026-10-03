@@ -28,4 +28,4 @@ Both laptops only have 8GB of RAM, which isn't enough to comfortably run a serve
 
 Server Core has no graphical interface — everything is done through PowerShell. It uses less memory, which matters on 8GB laptops, and it's also how a lot of real production servers are actually run. Active Directory itself is still managed visually, just from the client machine using RSAT, rather than from the server directly.
 
-See `PROCESS-NOTES.md` for the full story of how this was built, including what went wrong along the way and how it got fixed.
+See PROCESS-NOTES.md for the full story of how this was built, including what went wrong along the way and how it got fixed, NETWORKING-NOTES.md for a deeper dive specifically into the networking problems and how they were diagnosed, and ADVANCED-AD-NOTES.md for the group policy, security group, and password policy work.
